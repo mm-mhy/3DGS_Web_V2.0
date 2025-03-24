@@ -1,0 +1,102 @@
+#convert_img {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    height: 600px;
+    width: 800px;
+    border: 4px solid rgba(255, 255, 255, 0.5);
+    border-radius: 30px;
+    overflow: hidden;
+    cursor: pointer;
+    background-color: gray;
+}
+#img_before_box{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url('../img/back.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 4;
+}
+#aigc_parm_panel {
+    position: absolute;
+    top: 50px;
+    right: 50px;
+    height: 600px;
+    width: 400px;
+    border: 4px solid rgba(255, 255, 255, 0.5);
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+}
+.interact_button{
+    cursor: pointer;
+    width: 90%;
+    margin: auto;
+    margin-top: 20px;
+    background-color: #f0f0f0;
+    text-align: center;
+    line-height: 50px;
+    border-radius: 20px;
+    border: 1px solid white;
+    font-weight: bold;
+    font-size: 20px;
+    letter-spacing: 15px;
+}
+.interact_button:hover {
+    box-shadow:  0 0 20px 5px rgba(255, 255, 255, 0.4);
+    font-size: 22px;
+}
+#aigc_img_input{
+    display: none;
+}
+#convert_img img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+#slider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 800px;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: ew-resize;
+    z-index: 3;
+    margin: auto;
+    opacity: 0;
+    display: none;
+}
+#spliter_box{
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    top: 48%;
+    left: 50%;
+    background: rgba(30, 30, 30, 0.806);
+    z-index: 2;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 45px;
+    font-size: 30px;
+    font-weight: bold;
+    user-select: none;
+    border: 6px solid gray;
+    color: gray;
+    display: none;
+}
+#aigc_img_clear{
+    background-color: red;
+    border: 3px solid white;
+    color: white;
+    display: none;
+}
+#file-clear{
+    background-color: red;
+    border: 3px solid white;
+    color: white;
+    display: none;
+}

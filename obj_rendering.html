@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OBJ Viewer</title>
+    <link rel="stylesheet" href="css/main_page.css">
+    <link rel="stylesheet" href="css/aigc_climate_page.css">
+</head>
+<body>
+    <div id="nav_box">
+        <div class="nav_content">
+            <div class="nav_label">3D内容智能生成</div>
+            <div class="nav_label">AIGC气象智能生成</div>
+            <div class="nav_label">其他</div>
+            <div id="block"></div>
+        </div>
+    </div>
+    <div id = "pagebox">
+        <div id="page">
+            <div id="obj_page">
+                <div id="render_window">
+                    <div id="img_before_scene"></div>
+                </div>
+                <div id = "parm_panel">
+                    <div id="mp4_file_uploader" >
+                        <div id="lay_img">
+
+                        </div>
+                    </div>
+                    <input type="file" id="mp4_file_input" accept=".mp4"/>
+                    <div id="file-deliver" class="interact_button">上传</div>
+                    <div id="file-convert" class="interact_button">生成</div>
+                    <div id="file-uploader" class="interact_button">导入</div>
+                    <input type="file" id="file-input" accept=".obj"/>
+                    <div id="file-clear" class="interact_button">清空</div>
+                </div>
+            </div>
+
+            <div id="AIGC_page">
+                <div id="convert_img">
+                    <input type="range" min="0" max="100" value="100" id="slider">
+                    <img id="img-after">
+                    <div id="spliter_box"><></div>
+                    <img id="img-before">
+                    <div id="img_before_box"></div>
+                </div>
+                <div id="aigc_parm_panel">
+                    <div id="aigc_img_uploader" class="interact_button">选择</div>
+                    <input type="file" id="aigc_img_input" accept=".png,.jpg,.jpeg"/>
+                    <div id="aigc_img_deliver" class="interact_button">上传</div>
+                    <div id="aigc_img_convert" class="interact_button">生成</div>
+                    <div id="aigc_img_clear" class="interact_button">清空</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="js/aigc_climate_page.js"></script>
+    <script src="js/obj_rendering.js"></script>
+    <script src="js/page_interact.js"></script>
+</body>
+</html>
