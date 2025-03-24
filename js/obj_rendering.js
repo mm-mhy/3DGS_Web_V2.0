@@ -2,14 +2,12 @@
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-
 // 设置渲染器
 renderer.setSize(800, 600);
 renderer.domElement.style.borderRadius = '20px';
 renderer.setClearColor(0x101010);
 // document.body.appendChild(renderer.domElement);
 document.getElementById('render_window').appendChild(renderer.domElement);
-
 // 添加光源
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
@@ -18,7 +16,6 @@ directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 const gridHelper = new THREE.GridHelper(20, 20,0x444444, 0x606060);
 scene.add(gridHelper);
-
 // 设置相机位置和轨道控制器
 camera.position.set(20, 10, 20);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
