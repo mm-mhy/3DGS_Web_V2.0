@@ -23,7 +23,14 @@ controls.enableDamping = true;
 const img_before_scene = document.getElementById('img_before_scene');
 const file_clear = document.getElementById('file-clear');
 //视频文件选择
+const CONVERTFORINDOOR = false;//.obj
+const CONVERTFOROBJECT = true;//.ply
+let selectChangedOption = CONVERTFOROBJECT;
 let mp4FilePath = "";
+let is_click = false;
+let is_click2 = false;
+let rebuild_mode = 0;
+let rebuild_mode_select_label = document.getElementById('rebuild_mode_select_label');
 document.getElementById('mp4_file_uploader').addEventListener('click', function() {
     document.getElementById('mp4_file_input').click();
 });
@@ -59,98 +66,62 @@ document.getElementById('mp4_file_input').addEventListener('change', async funct
         }
     }
 });
-
 //视频文件上传，发送文件到服务端
 document.getElementById("file-deliver").addEventListener("click", async function() {
-    const mp4FileInput = document.getElementById('mp4_file_input');
-    const file = mp4FileInput.files[0];
-    const filename = mp4FileInput.files[0].name.split('.')[0];
-    if (!file) {
-        alert('请先选择视频文件');
-        return;
+    post_MP4_file();
+});
+//选择转换方式
+document.getElementById('rebuild_mode_select').addEventListener('click', function() {
+    if (!is_click) {
+        let mode_select_list = document.getElementById('mode_select_list');
+        let mode_select_img = document.getElementById('mode_select_img');
+        this.style.borderColor =  "rgba(87, 87, 87, 0.8)";
+        mode_select_img.src = 'img/向上.png';
+        mode_select_list.style.display = 'block';
+        is_click = true;
     }
-    document.getElementById("lay_img").classList.add('loading');
-    const formData = new FormData();
-    formData.append('file', file);
-    try{
-        const response = await fetch('http://localhost:5000/upload',{
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        if(response.ok){
-            alert('上传成功');
-            //返回服务器的文件路径
-            mp4FilePath = result.file_path;
-        }else{
-            alert('上传失败');
-        }
-    }catch(error){
-        alert('上传失败');
-    }finally{
-        document.getElementById("lay_img").classList.remove('loading');
+    else {
+        let mode_select_list = document.getElementById('mode_select_list');
+        let mode_select_img = document.getElementById('mode_select_img');
+        this.style.borderColor =  "rgba(83, 83, 83, 0.4)";
+        mode_select_img.src = 'img/向下.png';
+        mode_select_list.style.display = 'none';
+        is_click = false;
     }
 });
-
+document.getElementById('mode_select_list').children[0].addEventListener('click', function() {
+    rebuild_mode_select_label.innerText = '室内场景生成';
+    rebuild_mode = 1;
+});
+document.getElementById('mode_select_list').children[1].addEventListener('click', function() {
+    rebuild_mode_select_label.innerText = '物体生成';
+    rebuild_mode = 2;
+});
 // 发送转换请求给服务端并接收ply或obj文件
 document.getElementById("file-convert").addEventListener("click", async function() {
-    if (!mp4FilePath) {
-        alert('未获取服务器视频文件路径');
-        return;
+    if(rebuild_mode == 0){
+        get_rebuild_mode_0();
     }
-    // 显示转换进度指示器
-    document.getElementById('lay_img').classList.add('loading');
-    try {
-        const response = await fetch('http://localhost:5000/convert', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ videoPath: mp4FilePath })
-        });
-        const result = await response.json();
-        if (response.ok) {
-            alert('文件转换成功');
-            // 检查是否成功获取OBJ文件内容
-            if (result.objContent) {
-                // 清除旧模型
-                clearScene();
-                // 加载OBJ文件
-                const loader = new THREE.OBJLoader();
-                const object = loader.parse(result.objContent);
-                // 自动缩放模型
-                const bbox = new THREE.Box3().setFromObject(object);
-                const center = bbox.getCenter(new THREE.Vector3());
-                object.position.sub(center);
-                const size = bbox.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 5 / maxDim;
-                object.scale.set(scale, scale, scale);
-                // 应用默认材质
-                object.traverse(child => {
-                    if (child.isMesh) {
-                        child.material = new THREE.MeshPhongMaterial({
-                            color: 0x2194ce,
-                            shininess: 100
-                        });
-                    }
-                });
-                scene.add(object);
-                img_before_scene.style.display = 'none';
-                file_clear.style.display = 'block';
-            } else {
-                alert('未获取到OBJ文件内容');
-            }
-        } else {
-            alert('文件转换失败: ' + result.message);
-        }
-    } catch (error) {
-        alert('转换过程中发生错误: ' + error.message);
-    } finally {
-        document.getElementById('lay_img').classList.remove('loading');
+    if(rebuild_mode == 1){
+        get_rebuild_mode_1();
+    }
+    if(rebuild_mode == 2){
+        get_rebuild_mode_2();
     }
 });
-
+//导入obj和导入ply
+document.getElementById('more').addEventListener('click',function(){
+    if(!is_click2){
+        let more_content = document.getElementById('more_content');
+        more_content.style.display = 'block';
+        is_click2 = true;
+    }
+    else{
+        let more_content = document.getElementById('more_content');
+        more_content.style.display = 'none';
+        is_click2 = false;
+    }
+});
 //OBJ文件本地展示
 document.getElementById('file-uploader').addEventListener('click', function() {
     document.getElementById('file-input').click();
@@ -189,6 +160,7 @@ document.getElementById('file-input').addEventListener('change', function(e) {
             scene.add(object);
             img_before_scene.style.display = 'none';
             file_clear.style.display = 'block';
+            more_content.style.display = 'none';
         } catch (error) {
             console.error('Error loading OBJ:', error);
             alert('无法加载OBJ文件，请检查文件格式');
@@ -196,11 +168,63 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     };
     reader.readAsText(file);
 });
+//PLY文件本地展示
+document.getElementById('file-uploader-ply').addEventListener('click', function() {
+    document.getElementById('file-input-ply').click();
+})
+// 处理文件上传
+document.getElementById('file-input-ply').addEventListener('change', function(e) {
+    const img_before_scene = document.getElementById('img_before_scene');
+    img_before_scene.classList.add('loading');
+    const more_content = document.getElementById('more_content');
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const contents = event.target.result;
+        const loader = new THREE.PLYLoader();
+
+        const geometry = loader.parse(contents);
+        if (geometry.attributes.color) {
+            console.log("has color");
+            // 假设颜色数据以浮点数形式存储在[0, 1]范围内
+            const colors = geometry.attributes.color.array;
+            for (let i = 0; i < colors.length; i += 3) {
+                // 可能需要将颜色数据从 [0, 1] 范围转换为 [0, 255] 范围
+                colors[i] *= 255;
+                colors[i + 1] *= 255;
+                colors[i + 2] *= 255;
+            }
+        }
+
+        let material;
+        if (geometry.attributes.color) {
+            material = new THREE.PointsMaterial({ size: 0.01, vertexColors: true });
+        } else {
+            material = new THREE.PointsMaterial({ size: 0.01, color: 0xbbbbbb });
+        }
+        const mesh = new THREE.Points(geometry, material);
+
+        geometry.computeBoundingBox();
+        if (geometry.boundingBox) {
+            const center = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            mesh.position.sub(center);
+        }
+        scene.add(mesh);
+        img_before_scene.style.display = 'none';
+        file_clear.style.display = 'block';
+        more_content.style.display = 'none';
+        img_before_scene.classList.remove('loading');
+    };
+    reader.readAsArrayBuffer(file);
+    console.log(scene.children.length)
+})
 //清空场景内容
 function clearScene(){
     // 清除所有网格和材质
     scene.traverse(child => {
-        if (child.isMesh) {
+        if (child.isPoints || child.isMesh) {
             child.geometry.dispose(); // 释放几何体
             if (child.material) {
                 if (Array.isArray(child.material)) {
@@ -220,7 +244,7 @@ function clearScene(){
 document.getElementById('file-clear').addEventListener('click', function() {
     let hasMesh = false;
     scene.traverse(child => {
-        if (child.isMesh) hasMesh = true;
+        if (child.isPoints || child.isMesh) hasMesh = true;
     });
     if (!hasMesh) {
         alert('当前场景没有模型');
@@ -235,7 +259,6 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
 // 动画循环
 function animate() {
     requestAnimationFrame(animate);
