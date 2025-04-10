@@ -23,18 +23,33 @@
                 <div id = "parm_panel">
                     <div id="mp4_file_uploader" >
                         <div id="lay_img">
-
                         </div>
                     </div>
                     <input type="file" id="mp4_file_input" accept=".mp4"/>
                     <div id="file-deliver" class="interact_button">上传</div>
+                    <div id="rebuild_mode_select">
+                        <span style="margin-left: 10%;" id = "rebuild_mode_select_label">选择生成模式</span>
+                        <img id="mode_select_img" src="./img/向下.png">
+                        <ul id="mode_select_list">
+                            <li>室内场景生成</li>
+                            <li>物体生成</li>
+                        </ul>
+                    </div>
                     <div id="file-convert" class="interact_button">生成</div>
-                    <div id="file-uploader" class="interact_button">导入</div>
-                    <input type="file" id="file-input" accept=".obj"/>
                     <div id="file-clear" class="interact_button">清空</div>
                 </div>
+                <div id="more">
+                    <img src="./img/更多.png" alt="更多" id="more_img">
+                    <div id="more_content">
+                        <div id="file-uploader" class="import_mode">导入obj模型</div>
+                        <input type="file" id="file-input" accept=".obj"/>                    
+                        <div id="file-uploader-ply" class="import_mode">导入ply模型</div>
+                        <input type="file" id="file-input-ply" accept=".ply"/>
+                        <hr>    
+                        <div class="import_mode">其他</div>
+                    </div>
+                </div>
             </div>
-
             <div id="AIGC_page">
                 <div id="convert_img">
                     <input type="range" min="0" max="100" value="100" id="slider">
@@ -56,6 +71,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js"></script>
+    <script src="js/communication.js"></script>
     <script src="js/aigc_climate_page.js"></script>
     <script src="js/obj_rendering.js"></script>
     <script src="js/page_interact.js"></script>
