@@ -34,7 +34,7 @@ Running server-side code can be entered:
 
 Note that this is only a platform framework, the back-end 3D reconstruction based approach is within other member repositories, keep watching this repository for more information.
 
-##Reference
+## Reference
 
 [t3d-gaussian-splatting](https://github.com/uinosoft/t3d-gaussian-splatting) - shawn0326
 
