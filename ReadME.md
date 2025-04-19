@@ -1,38 +1,38 @@
-#3D模型生成与渲染平台
+# 3DGS_Web_V2.0
 
-这是成都信息工程大学(CUIT)计算机学院AICG实验室项目，该实验室基于人工智能、计算机图形学、计算机视觉开展研究。该项目基于3D高斯重建以及气象生产技术，实现了一款多功能、快捷的视频转模型，图生图工具。
-其中对于.ply文件的渲染参照了[t3d-gaussian-splatting](https://github.com/uinosoft/t3d-gaussian-splatting)并且项目中拥有[演示demo](https://uinosoft.github.io/t3d-gaussian-splatting/examples/)。
+This is a project of AICG Lab, School of Computer Science, Chengdu University of Information Engineering (CUIT), which carries out research based on Artificial Intelligence, Computer Graphics, and Computer Vision. The project is based on 3D Gaussian reconstruction as well as weather production technology, and implements a multi-functional and fast video-to-model, graph-to-graph tool.
+The rendering of the .ply files references [t3d-gaussian-splatting](https://github.com/uinosoft/t3d-gaussian-splatting) and the project has [demo](https://uinosoft.github.io/t3d-gaussian-splatting/examples/).
 
-##Usage
+## Usage
 
-####前端
+#### CLIENT
 
-你可以使用以下命令安装http-server以运行前端代码：
+You can use the following command to install http-server to run the front-end code:
 
 	npm install -g http-server
 
-运行前端代码可输入：
+Running front-end code can be entered:
 
 	http-server
 
-在浏览器打开对应URL即可，例如，在浏览器搜索框输入：
+Just open the corresponding URL in your browser, e.g., enter it in the browser search box:
 
 	http://localhost:8080/obj_rendering.html
     
 
-####后端
+#### SERVER
 
-你可以使用以下命令安装一些必要的依赖：
+You can use the following command to install some of the necessary dependencies:
 
 	pip install flask werkzeug flask-cors
 	…… ……
 	……
 
-运行后端代码可输入：
+Running server-side code can be entered:
 
 	python app.js
 
-注意，这只是一个平台框架，后端基于三维重建的方法在其他成员仓库内，可持续关注本仓库以获取更多信息。
+Note that this is only a platform framework, the back-end 3D reconstruction based approach is within other member repositories, keep watching this repository for more information.
 
 ##Reference
 
