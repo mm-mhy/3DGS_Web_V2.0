@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="css/aigc_climate_page.css">
 </head>
 <body>
+    <!-- 导航栏 -->
     <div id="nav_box">
         <div class="nav_content">
             <div class="nav_label">3D内容智能生成</div>
@@ -14,12 +15,24 @@
             <div id="block"></div>
         </div>
     </div>
+    <!-- 页面内容 -->
     <div id = "pagebox">
         <div id="page">
+            <!-- 3D内容智能生成 -->
             <div id="obj_page">
-                <div id="render_window">
+                <!-- 主渲染窗口 -->
+                <div id="render_main_window">
                     <div id="img_before_scene"></div>
+                    <div id="two_render_window">
+                        <div id="render_window">
+                        <!-- OBJ渲染内容 -->
+                        </div>
+                        <div id="render_ply_window">
+                        <!-- PLY渲染内容 -->
+                        </div>
+                    </div>
                 </div>
+                <!-- 操作面板 -->
                 <div id = "parm_panel">
                     <div id="mp4_file_uploader" >
                         <div id="lay_img">
@@ -36,7 +49,6 @@
                         </ul>
                     </div>
                     <div id="file-convert" class="interact_button">生成</div>
-                    <div id="file-clear" class="interact_button">清空</div>
                 </div>
                 <div id="more">
                     <img src="./img/更多.png" alt="更多" id="more_img">
@@ -50,7 +62,9 @@
                     </div>
                 </div>
             </div>
+            <!-- AIGC气象智能生成 -->
             <div id="AIGC_page">
+                <!-- 图片渲染窗口 -->
                 <div id="convert_img">
                     <input type="range" min="0" max="100" value="100" id="slider">
                     <img id="img-after">
@@ -58,6 +72,7 @@
                     <img id="img-before">
                     <div id="img_before_box"></div>
                 </div>
+                <!-- 操作面板 -->
                 <div id="aigc_parm_panel">
                     <div id="aigc_img_uploader" class="interact_button">选择</div>
                     <input type="file" id="aigc_img_input" accept=".png,.jpg,.jpeg"/>
@@ -68,10 +83,56 @@
             </div>
         </div>
     </div>
+    <!-- 操作脚本 -->
+    <script>
+        // 用于跟踪已加载的脚本
+        window.loadedScripts = window.loadedScripts || {};
+        // 防止重复执行脚本的函数
+        function requireScript(scriptName) {
+            if (window.loadedScripts[scriptName]) {
+                console.log(`脚本 ${scriptName} 已加载，跳过`);
+                return true; // 已加载
+            }
+            window.loadedScripts[scriptName] = true;
+            console.log(`标记脚本 ${scriptName} 为已加载`);
+            return false; // 未加载
+        }
+    </script>
+    <!-- 模块导入映射 -->
+	<script type='importmap'>
+		{
+			"imports": {
+                "t3d": "./js/examples/libs/t3d/build/t3d.module.js",
+                "t3d/addons/": "./js/examples/libs/t3d/examples/jsm/",
+                "t3d-gaussian-splatting": "./js/build/t3d.gaussiansplatting.js"
+			}
+		}
+	</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js"></script>
+    <!-- 加载进度条库 -->
+	<script src="./js/examples/libs/nanobar.min.js"></script>
+	<!-- Import maps 兼容性填充 -->
+	<!-- 当 import maps 被广泛支持时可移除此脚本 -->
+	<script async src="./js/examples/libs/es-module-shims.js"></script>
+	<!-- <script type='module' src="js/examples/ply_rendering.js"></script> -->
+    <script type='module'>
+        // 检查是否已加载
+        if (requireScript('ply_rendering')) {
+            console.log('跳过重复加载 ply_rendering.js');
+        } else {
+            // 动态导入模块
+            import('./js/examples/ply_rendering.js')
+                .then(() => {
+                    console.log('ply_rendering.js 成功加载');
+                })
+                .catch(error => {
+                    console.error('加载 ply_rendering.js 出错:', error);
+                });
+        }
+    </script>
     <script src="js/communication.js"></script>
     <script src="js/aigc_climate_page.js"></script>
     <script src="js/obj_rendering.js"></script>
