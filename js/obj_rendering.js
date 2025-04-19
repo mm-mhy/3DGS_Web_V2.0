@@ -14,15 +14,13 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
-const gridHelper = new THREE.GridHelper(20, 20,0x444444, 0x606060);
-scene.add(gridHelper);
 // 设置相机位置和轨道控制器
 camera.position.set(20, 10, 20);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 const img_before_scene = document.getElementById('img_before_scene');
-const file_clear = document.getElementById('file-clear');
-//视频文件选择
+
+//相关常量、变量声明
 const CONVERTFORINDOOR = false;//.obj
 const CONVERTFOROBJECT = true;//.ply
 let selectChangedOption = CONVERTFOROBJECT;
@@ -31,9 +29,14 @@ let is_click = false;
 let is_click2 = false;
 let rebuild_mode = 0;
 let rebuild_mode_select_label = document.getElementById('rebuild_mode_select_label');
+let obj_hasbuild = false;
+let ply_hasbuild = false;
+//上传文件
 document.getElementById('mp4_file_uploader').addEventListener('click', function() {
     document.getElementById('mp4_file_input').click();
 });
+
+//选择mp4文件并处理
 document.getElementById('mp4_file_input').addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -44,7 +47,6 @@ document.getElementById('mp4_file_input').addEventListener('change', async funct
         video = document.createElement('video'); // 在此处赋值
         video.src = URL.createObjectURL(file);
         video.muted = true;
-
         await new Promise((resolve, reject) => {
             video.onloadedmetadata = resolve;
             video.onerror = reject;
@@ -66,49 +68,12 @@ document.getElementById('mp4_file_input').addEventListener('change', async funct
         }
     }
 });
+
 //视频文件上传，发送文件到服务端
 document.getElementById("file-deliver").addEventListener("click", async function() {
     post_MP4_file();
 });
-//选择转换方式
-document.getElementById('rebuild_mode_select').addEventListener('click', function() {
-    if (!is_click) {
-        let mode_select_list = document.getElementById('mode_select_list');
-        let mode_select_img = document.getElementById('mode_select_img');
-        this.style.borderColor =  "rgba(87, 87, 87, 0.8)";
-        mode_select_img.src = 'img/向上.png';
-        mode_select_list.style.display = 'block';
-        is_click = true;
-    }
-    else {
-        let mode_select_list = document.getElementById('mode_select_list');
-        let mode_select_img = document.getElementById('mode_select_img');
-        this.style.borderColor =  "rgba(83, 83, 83, 0.4)";
-        mode_select_img.src = 'img/向下.png';
-        mode_select_list.style.display = 'none';
-        is_click = false;
-    }
-});
-document.getElementById('mode_select_list').children[0].addEventListener('click', function() {
-    rebuild_mode_select_label.innerText = '室内场景生成';
-    rebuild_mode = 1;
-});
-document.getElementById('mode_select_list').children[1].addEventListener('click', function() {
-    rebuild_mode_select_label.innerText = '物体生成';
-    rebuild_mode = 2;
-});
-// 发送转换请求给服务端并接收ply或obj文件
-document.getElementById("file-convert").addEventListener("click", async function() {
-    if(rebuild_mode == 0){
-        get_rebuild_mode_0();
-    }
-    if(rebuild_mode == 1){
-        get_rebuild_mode_1();
-    }
-    if(rebuild_mode == 2){
-        get_rebuild_mode_2();
-    }
-});
+
 //导入obj和导入ply
 document.getElementById('more').addEventListener('click',function(){
     if(!is_click2){
@@ -122,21 +87,24 @@ document.getElementById('more').addEventListener('click',function(){
         is_click2 = false;
     }
 });
+
 //OBJ文件本地展示
 document.getElementById('file-uploader').addEventListener('click', function() {
     document.getElementById('file-input').click();
 });
+
 // 处理文件上传
 document.getElementById('file-input').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
+    rebuild_mode = 1;
     // 清除旧模型
     clearScene();
     // 加载OBJ文件
     const loader = new THREE.OBJLoader();
     const reader = new FileReader();
     reader.onload = function(event) {
-        const objData = event.target.result;
+    const objData = event.target.result;
         try {
             const object = loader.parse(objData);
             // 自动缩放模型
@@ -159,8 +127,10 @@ document.getElementById('file-input').addEventListener('change', function(e) {
             });
             scene.add(object);
             img_before_scene.style.display = 'none';
-            file_clear.style.display = 'block';
             more_content.style.display = 'none';
+            rebuild_mode_select_label.innerText = '室内场景生成';
+            document.getElementById('two_render_window').style.left = '0px';
+            rebuild_mode = 1;
         } catch (error) {
             console.error('Error loading OBJ:', error);
             alert('无法加载OBJ文件，请检查文件格式');
@@ -168,61 +138,9 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     };
     reader.readAsText(file);
 });
-//PLY文件本地展示
-document.getElementById('file-uploader-ply').addEventListener('click', function() {
-    document.getElementById('file-input-ply').click();
-})
-// 处理文件上传
-document.getElementById('file-input-ply').addEventListener('change', function(e) {
-    const img_before_scene = document.getElementById('img_before_scene');
-    img_before_scene.classList.add('loading');
-    const more_content = document.getElementById('more_content');
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function (event) {
-        const contents = event.target.result;
-        const loader = new THREE.PLYLoader();
 
-        const geometry = loader.parse(contents);
-        if (geometry.attributes.color) {
-            console.log("has color");
-            // 假设颜色数据以浮点数形式存储在[0, 1]范围内
-            const colors = geometry.attributes.color.array;
-            for (let i = 0; i < colors.length; i += 3) {
-                // 可能需要将颜色数据从 [0, 1] 范围转换为 [0, 255] 范围
-                colors[i] *= 255;
-                colors[i + 1] *= 255;
-                colors[i + 2] *= 255;
-            }
-        }
-
-        let material;
-        if (geometry.attributes.color) {
-            material = new THREE.PointsMaterial({ size: 0.01, vertexColors: true });
-        } else {
-            material = new THREE.PointsMaterial({ size: 0.01, color: 0xbbbbbb });
-        }
-        const mesh = new THREE.Points(geometry, material);
-
-        geometry.computeBoundingBox();
-        if (geometry.boundingBox) {
-            const center = new THREE.Vector3();
-            geometry.boundingBox.getCenter(center);
-            mesh.position.sub(center);
-        }
-        scene.add(mesh);
-        img_before_scene.style.display = 'none';
-        file_clear.style.display = 'block';
-        more_content.style.display = 'none';
-        img_before_scene.classList.remove('loading');
-    };
-    reader.readAsArrayBuffer(file);
-    console.log(scene.children.length)
-})
 //清空场景内容
 function clearScene(){
-    // 清除所有网格和材质
     scene.traverse(child => {
         if (child.isPoints || child.isMesh) {
             child.geometry.dispose(); // 释放几何体
@@ -236,33 +154,276 @@ function clearScene(){
             scene.remove(child); // 从场景移除
         }
     });
-
-    // 强制清理残留的组或空对象
     scene.children = scene.children.filter(child => !child.isMesh && !child.isGroup);
 }
-//处理清空场景内容
-document.getElementById('file-clear').addEventListener('click', function() {
-    let hasMesh = false;
-    scene.traverse(child => {
-        if (child.isPoints || child.isMesh) hasMesh = true;
-    });
-    if (!hasMesh) {
-        alert('当前场景没有模型');
-        return;
+
+//文件上传成功弹窗
+function showUploadinfo(operation,status){
+    const reminder = document.createElement('div');
+    document.body.appendChild(reminder);
+    reminder.classList.add('reminder');
+    const img = document.createElement('img');
+    img.style.height = '100%'
+    reminder.appendChild(img);
+    const reminder_text = document.createElement('span');
+    reminder_text.classList.add('reminder_text');
+    reminder.appendChild(reminder_text);
+    if(status == 1){
+        img.src = 'img/Success.png';
+        reminder_text.innerText = operation + '成功';
+        reminder.style.borderColor = 'green';
+        reminder_text.style.color = 'green';
+        console.log("状态："+ operation + "成功");
     }
-    clearScene();
-    img_before_scene.style.display = 'block';
-})
+    else{
+        img.src = 'img/Error.png';
+        reminder_text.innerText = operation + '失败';
+        reminder.style.borderColor = 'red';
+        reminder_text.style.color = 'red';
+        console.log("状态："+ operation + "失败");
+    }
+    setTimeout(() => {
+        document.body.removeChild(reminder);
+    },1000);
+
+}
+
 // 窗口大小调整处理
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = 800 / 600;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(800, 600);
 });
+
+// 简化版视图控制器
+function createViewControls() {
+    // 创建画布元素
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    canvas.style.position = 'absolute';
+    canvas.style.bottom = '0px';
+    canvas.style.left = '0px';
+    canvas.style.zIndex = '99';
+    canvas.style.userSelect = 'none';
+    const context = canvas.getContext('2d', { alpha: true });
+    // 轴向定义
+    const axes = [
+        { name: 'x', color: '#ff3653', direction: new THREE.Vector3(1, 0, 0) },
+        { name: '-x', color: '#ff3653', direction: new THREE.Vector3(-1, 0, 0) },
+        { name: 'y', color: '#8adb00', direction: new THREE.Vector3(0, 1, 0) },
+        { name: '-y', color: '#8adb00', direction: new THREE.Vector3(0, -1, 0) },
+        { name: 'z', color: '#2c8fff', direction: new THREE.Vector3(0, 0, 1) },
+        { name: '-z', color: '#2c8fff', direction: new THREE.Vector3(0, 0, -1) }
+    ];
+    // 视图点
+    const points = axes.map(() => ({
+        axisIndex: 0,
+        position: new THREE.Vector3(),
+        linePosition: new THREE.Vector3()
+    }));
+    // 最后一次渲染的四元数，用于检测相机是否移动
+    const lastQuaternion = new THREE.Quaternion();
+    // 平滑过渡的目标相机位置
+    const targetCameraPosition = new THREE.Vector3();
+    const currentCameraPosition = new THREE.Vector3();
+    let isTransitioning = false;
+    let transitionProgress = 0;
+    const transitionSpeed = 0.5; // 过渡速度因子
+    // 事件处理
+    function onPointerUp(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        // 检测点击了哪个控制点
+        for (let i = 0; i < points.length; i++) {
+            const point = points[i];
+            const dx = point.position.x - x;
+            const dy = point.position.y - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= 10) { // 点击半径
+                const axisIndex = point.axisIndex;
+                // 根据点击的轴设置相机目标位置
+                targetCameraPosition.copy(camera.position);
+                switch(axisIndex) {
+                    case 0: // x
+                        targetCameraPosition.set(20, 0, 0);
+                        break;
+                    case 1: // -x
+                        targetCameraPosition.set(-20, 0, 0);
+                        break;
+                    case 2: // y
+                        targetCameraPosition.set(0, 20, 0);
+                        break;
+                    case 3: // -y
+                        targetCameraPosition.set(0, -20, 0);
+                        break;
+                    case 4: // z
+                        targetCameraPosition.set(0, 0, 20);
+                        break;
+                    case 5: // -z
+                        targetCameraPosition.set(0, 0, -20);
+                        break;
+                }
+                currentCameraPosition.copy(camera.position);
+                isTransitioning = true;
+                transitionProgress = 0;
+                break;
+            }
+        }
+    }
+    canvas.addEventListener('pointerup', onPointerUp);
+    // 缓动函数 - 平滑过渡
+    function easeOutCubic(x) {
+        return 1 - Math.pow(1 - x, 3);
+    }
+    // 处理相机平滑过渡
+    function updateCameraTransition() {
+        if (!isTransitioning) return false;
+        transitionProgress += transitionSpeed;
+        if (transitionProgress >= 1) {
+            // 过渡完成
+            camera.position.copy(targetCameraPosition);
+            isTransitioning = false;
+        } else {
+            // 使用缓动函数使过渡更平滑
+            const easedProgress = easeOutCubic(transitionProgress);
+            // 平滑插值
+            camera.position.copy(currentCameraPosition).lerp(targetCameraPosition, easedProgress);
+        }
+        camera.lookAt(0, 0, 0);
+        controls.update();
+        return true;
+    }
+    // 更新控制器
+    function update() {
+        // 处理相机过渡动画
+        const transitionOccurred = updateCameraTransition();
+        // 检测相机是否变化或处于过渡状态
+        if (lastQuaternion.dot(camera.quaternion) < 0.999 || transitionOccurred) {
+            lastQuaternion.copy(camera.quaternion);
+            const center = new THREE.Vector3(50, 50, 0);
+            const distance = 40; // 到中心的距离
+            const lineDistance = 20; // 线条长度
+            // 定义固定的相对位置（在三维空间中）
+            const fixedPositions = [
+                new THREE.Vector3(1, 0, 0).multiplyScalar(distance),    // x
+                new THREE.Vector3(-1, 0, 0).multiplyScalar(distance),   // -x
+                new THREE.Vector3(0, 1, 0).multiplyScalar(distance),    // y
+                new THREE.Vector3(0, -1, 0).multiplyScalar(distance),   // -y
+                new THREE.Vector3(0, 0, 1).multiplyScalar(distance),    // z
+                new THREE.Vector3(0, 0, -1).multiplyScalar(distance)    // -z
+            ];
+            const fixedLinePositions = [
+                new THREE.Vector3(1, 0, 0).multiplyScalar(lineDistance),    // x
+                new THREE.Vector3(-1, 0, 0).multiplyScalar(lineDistance),   // -x
+                new THREE.Vector3(0, 1, 0).multiplyScalar(lineDistance),    // y
+                new THREE.Vector3(0, -1, 0).multiplyScalar(lineDistance),   // -y
+                new THREE.Vector3(0, 0, 1).multiplyScalar(lineDistance),    // z
+                new THREE.Vector3(0, 0, -1).multiplyScalar(lineDistance)    // -z
+            ];
+            // 计算所有轴的位置
+            for (let i = 0; i < axes.length; i++) {
+                const point = points[i];
+                point.axisIndex = i;
+                // 应用相机旋转的反向变换到轴向量上
+                const rotatedPos = fixedPositions[i].clone()
+                    .applyQuaternion(camera.quaternion.clone().conjugate());
+                const rotatedLinePos = fixedLinePositions[i].clone()
+                    .applyQuaternion(camera.quaternion.clone().conjugate());
+                // 计算点的位置（屏幕坐标）
+                point.position.copy(rotatedPos).add(center);
+                point.position.y = 100 - point.position.y; // 翻转Y轴以匹配屏幕坐标
+                // 计算线条的端点位置
+                point.linePosition.copy(rotatedLinePos).add(center);
+                point.linePosition.y = 100 - point.linePosition.y;
+            }
+            // 根据Z轴排序点，确保正确的绘制顺序
+            const pointsWithDepth = points.map((point, index) => ({
+                point,
+                depth: fixedPositions[point.axisIndex].clone()
+                    .applyQuaternion(camera.quaternion.clone().conjugate()).z,
+                index
+            }));
+            // 按深度排序
+            pointsWithDepth.sort((a, b) => a.depth - b.depth);
+            // 清空画布
+            context.clearRect(0, 0, 100, 100);
+            // 绘制后面的点（z值小的）
+            const halfLength = Math.floor(pointsWithDepth.length / 2);
+            for (let i = 0; i < halfLength; i++) {
+                const { point, index } = pointsWithDepth[i];
+                const axis = axes[point.axisIndex];
+                drawPoint(context, point, axis);
+            }
+            // 绘制所有线条
+            for (let i = 0; i < pointsWithDepth.length; i++) {
+                const { point, index } = pointsWithDepth[i];
+                const axis = axes[point.axisIndex];
+                drawLine(context, center, point, axis);
+            }
+            // 绘制前面的点（z值大的）
+            for (let i = halfLength; i < pointsWithDepth.length; i++) {
+                const { point, index } = pointsWithDepth[i];
+                const axis = axes[point.axisIndex];
+                drawPoint(context, point, axis);
+            }
+        }
+    }
+    
+// 绘制控制点
+function drawPoint(context, point, axis) {
+        context.fillStyle = axis.color;
+        context.beginPath();
+        context.arc(point.position.x, point.position.y, 10, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = '#ffffff';
+        context.font = 'bold 12px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText(axis.name, point.position.x, point.position.y);
+}
+
+// 绘制线条
+function drawLine(context, center, point, axis) {
+        context.strokeStyle = axis.color;
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(center.x, center.y);
+        context.lineTo(point.linePosition.x, point.linePosition.y);
+        context.stroke();
+}
+    
+    // 添加到DOM
+document.getElementById('render_window').appendChild(canvas);
+    // 返回更新函数和销毁函数
+    return {
+        update: update,
+        dispose: function() {
+            canvas.removeEventListener('pointerup', onPointerUp);
+            document.getElementById('render_window').removeChild(canvas);
+        }
+    };
+}
+
+// 创建视图控制器并获取更新函数
+const viewControls = createViewControls();
+
+// 修改动画循环函数
+const originalAnimate = animate;
+animate = function() {
+    requestAnimationFrame(animate);
+    controls.update();
+    // 更新视图控制器
+    viewControls.update();
+    renderer.render(scene, camera);
+};
+
 // 动画循环
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
 }
+
 animate();
